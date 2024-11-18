@@ -20,5 +20,6 @@ from appTrigorojo import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index),
-    path('login/', views.login)
+    path('login/', views.login),
+    path('administracion/', views.administracion)
 ]
