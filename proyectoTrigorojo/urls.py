@@ -16,10 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from appTrigorojo import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index),
     path('login/', views.login),
-    path('administracion/', views.administracion)
-]
+    path('administracion/', views.administracion),
+    path('categoria/<int:categoria_id>/productos/', views.productos_por_categoria, name='productos_por_categoria'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Esto sirve las imágenes y archivos de medios

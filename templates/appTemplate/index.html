@@ -91,34 +91,57 @@
         <div
           class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center"
         >
-          { for categoria in categorias }
+          <!-- inicio card -->
+          {% for categoria in categorias %}
           <div class="col mb-5">
             <div class="card h-100">
-              <!-- Imagen del producto-->
+              <!-- Imagen de la categoría -->
+              {% if categoria.imagen %}
+              <img
+                class="card-img-top"
+                src="{{ categoria.imagen.url }}"
+                alt="{{ categoria.nombre }}"
+              />
+              {% else %}
               <img
                 class="card-img-top"
                 src="https://dummyimage.com/450x300/dee2e6/6c757d.jpg"
-                alt="..."
+                alt="Imagen no disponible"
               />
-              <!-- Detalles del producto-->
+              {% endif %}
+
+              <!-- Detalles de la categoria-->
+
+              <!-- Detalles de la categoria -->
               <div class="card-body p-4">
                 <div class="text-center">
                   <!-- Nombre del producto -->
-                  <h5 class="fw-bolder">{categoria.nombre}</h5>
-                  <!-- Precio del producto -->
-                  {categoria.descripcion}
+                  <h5 class="fw-bolder">{{ categoria.nombre }}</h5>
+                  <!-- Descripción de la categoría -->
+                  <p>{{ categoria.descripcion }}</p>
                 </div>
               </div>
+
               <!-- Product actions-->
               <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                 <div class="text-center">
-                  <a class="btn btn-outline-dark mt-auto" href="#"
-                    >Ver productos</a
+                  {% if categoria.id %}
+                  <a
+                    class="btn btn-outline-dark mt-auto"
+                    href="{% url 'productos_por_categoria' categoria.id %}"
                   >
+                    Ver productos
+                  </a>
+                  {% else %}
+                  <span>No hay productos disponibles</span>
+                  {% endif %}
                 </div>
               </div>
             </div>
           </div>
+          {% endfor %}
+          <!-- final card -->
+
           <div class="col mb-5">
             <div class="card h-100">
               <!-- Sale badge-->
