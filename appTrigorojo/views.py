@@ -14,8 +14,11 @@ def login(request):
 def administracion(request):
     return render(request, 'administracion.html')
 
-def listarProductos(request):
+def productos_view(request):
     return render(request, 'productos.html')
+
+def ventas_view(request):
+    return render(request, 'ventas.html')
 
 def productos_por_categoria(request, categoria_id):
     categoria = get_object_or_404(Categoria, id=categoria_id)

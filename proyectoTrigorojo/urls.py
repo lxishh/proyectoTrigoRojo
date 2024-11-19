@@ -25,4 +25,6 @@ urlpatterns = [
     path('login/', views.login),
     path('administracion/', views.administracion),
     path('categoria/<int:categoria_id>/productos/', views.productos_por_categoria, name='productos_por_categoria'),
+    path('productos/', views.productos_view),
+    path('ventas/', views.ventas_view),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Esto sirve las imágenes y archivos de medios
