@@ -10,9 +10,33 @@
 />
 <h1 class="mt-4 mb-4">Productos</h1>
 
-<a href="/registrar_productos" class="btn btn-success mb-4">
+<a href="/registrar_producto" class="btn btn-success mb-4">
   Agregar Producto
 </a>
+
+<!-- Formulario para filtros -->
+<form method="get" class="mb-4">
+  <div class="row">
+    <div class="col-md-4">
+       <!-- Select para elegir una categoría, con el nombre "categoria" -->
+      <select name="categoria" class="form-control">
+         <!-- Opción por defecto que indica al usuario que seleccione una categoría -->
+        <option value="">Filtrar por categoría</option>
+         <!-- Bucle para recorrer todas las categorías disponibles -->
+        {% for categoria in categorias %}
+          <!-- Cada categoría se convierte en una opción del select -->
+          <option value="{{ categoria }}" 
+          
+          {% if categoria == request.GET.categoria %}selected{% endif %}>{{ categoria }}</option>
+          <!-- ↑↑↑ Si la categoría actual es igual a la categoría seleccionada en la URL entonces la opción se marca como seleccionada en el <select>, y luego '{{ categoria }}'' Muestra el nombre de la categoría seleccionada -->
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+  </div>
+</form>
 
 <div class="row">
   <div class="col-xl-12 col-md-12">
@@ -24,6 +48,13 @@
         Tabla de Productos
       </div>
       <div class="card-body">
+        <input
+          type="text"
+          id="searchInput"
+          class="form-control mb-3"
+          placeholder="Buscar por nombre"
+        />
+
         <!-- Aquí estará la tabla -->
         <table id="productosTable" class="table table-striped table-bordered">
           <thead>
@@ -34,6 +65,7 @@
               <th>Cantidad</th>
               <th>Precio</th>
               <th>Categoria</th>
+              <th>Fecha de ingreso</th>
               <th>Opciones</th>
             </tr>
           </thead>
@@ -44,16 +76,23 @@
               <td scope="row">{{p.id}}</td>
               <td>{{p.nombre}}</td>
               <td>{{p.descripcion}}</td>
+              {% if p.cantidad > 0 %}
               <td>{{p.cantidad}}</td>
+              {% else %}
+              <td><span class="text-danger">Agotado</span></td>
+              {% endif %}
               <td>{{p.precio|floatformat:0 }}</td>
               <td>{{p.categoria}}</td>
+              <td>{{p.fecha_ingreso}}</td>
               <td>
                 <a
-                  href="/actualizarAlumno/{{a.id}}"
+                  href="/actualizar_producto/{{p.id}}"
                   class="btn btn-success btn-sm"
                   ><i class="bi bi-pencil"></i
                 ></a>
-                <a href="/eliminarAlumno/{{a.id}}" class="btn btn-danger btn-sm"
+                <a
+                  href="/eliminar_producto/{{p.id}}"
+                  class="btn btn-danger btn-sm"
                   ><i class="bi bi-trash"></i
                 ></a>
               </td>
@@ -67,4 +106,6 @@
   </div>
 </div>
 
+<!-- se enlaza el archivo javascript  -->
+<script src="{% static 'js/productos_busqueda_tabla.js' %}"></script>
 {% endblock %}
