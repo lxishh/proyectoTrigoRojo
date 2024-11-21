@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w3=0c++e8hfy+1k3muee$0i-43$lwd73vv*&8(x9lq_wxky(v5'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-w3=0c++e8hfy+1k3muee$0i-43$lwd73vv*&8(x9lq_wxky(v5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 
 # Application definition
@@ -98,6 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,  # Aumenta la longitud mínima recomendada para la contraseña
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -106,6 +109,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Seguridad adicional (OWASP recomendaciones)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)  # Redirige a HTTPS
+SESSION_COOKIE_SECURE = True  # Cookies de sesión seguras
+CSRF_COOKIE_SECURE = True  # Cookies CSRF seguras
+X_FRAME_OPTIONS = 'DENY'  # Evita el clickjacking
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)  # Strict-Transport-Security
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_BROWSER_XSS_FILTER = True  # Filtro contra ataques XSS
 
 
 # Internationalization
@@ -136,3 +149,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Ruta absoluta donde se guardan l
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Cambios importantes:
+#Variables sensibles mediante decouple: SECRET_KEY, DEBUG, ALLOWED_HOSTS, y configuraciones de la base de datos (DB_NAME, DB_USER, etc.) se obtienen de un archivo .env.
+#Cookies seguras: SESSION_COOKIE_SECURE y CSRF_COOKIE_SECURE activadas.
+#Redirección HTTPS: SECURE_SSL_REDIRECT activado para entornos de producción.
+#HSTS: Configuración para habilitar Strict-Transport-Security.
+#Mejoras en contraseñas: Longitud mínima de contraseñas aumentada a 12 caracteres.
+#Protección contra clickjacking: Añadido X_FRAME_OPTIONS = 'DENY'.
