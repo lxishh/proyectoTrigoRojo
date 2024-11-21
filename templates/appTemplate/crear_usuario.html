@@ -1,67 +1,80 @@
-{% extends 'administracion.html' %} {% load widget_tweaks %} {% block content %}
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card mt-5 shadow">
-            <div class="card-header text-center bg-dark text-white">
-              <h3>Crear Nuevo Usuario</h3>
-            </div>
-            <div class="card-body">
-              <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                  <label for="username" class="form-label"
-                    >Nombre de Usuario</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="username"
-                    name="username"
-                    required
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="email" class="form-label"
-                    >Correo Electrónico</label
-                  >
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="email"
-                    name="email"
-                    required
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="password" class="form-label">Contraseña</label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    id="password"
-                    name="password"
-                    required
-                  />
-                </div>
-                <div class="mb-3">
-                  <label for="group" class="form-label">Asignar Grupo</label>
-                  <select class="form-select" id="group" name="group">
-                    <option value="Vendedor">Vendedor</option>
-                    <option value="Propietario">Propietario</option>
-                  </select>
-                </div>
-                <div class="d-grid">
-                  <button type="submit" class="btn btn-dark">
-                    Crear Usuario
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+{% extends 'administracion.html' %} 
+{% load widget_tweaks %} 
+{% block content %}
 
-<{% endblock %}
+<h1 class="mt-4 mb-4">
+  {% if usuario %} Editar Usuario {% else %} Crear Nuevo Usuario {% endif %}
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <i class="fas fa-user-plus me-1"></i> 
+    {% if usuario %} Formulario para Editar Usuario {% else %} Formulario para Crear Usuario {% endif %}
+  </div>
+  <div class="card-body bg-light">
+    <form method="POST" action="">
+      {% csrf_token %}
+
+      <!-- Nombre de Usuario -->
+      <div class="mb-3">
+        <label for="username" class="form-label">Nombre de Usuario</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          class="form-control"
+          value="{{ usuario.username|default:'' }}"
+          required
+        />
+      </div>
+
+      <!-- Correo Electrónico -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo Electrónico</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-control"
+          value="{{ usuario.email|default:'' }}"
+          required
+        />
+      </div>
+
+      <!-- Contraseña (solo para creación) -->
+      {% if not usuario %}
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          class="form-control"
+          required
+        />
+      </div>
+      {% endif %}
+
+      <!-- Grupo -->
+      <div class="mb-3">
+        <label for="group" class="form-label">Asignar Grupo</label>
+        <select class="form-select" id="group" name="group">
+          {% for group in grupos %}
+            <option value="{{ group.name }}" 
+              {% if usuario and usuario.groups.all.0.name == group.name %}selected{% endif %}>
+              {{ group.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botones -->
+      <button type="submit" class="btn btn-success mt-3">
+        {% if usuario %} Actualizar {% else %} Guardar {% endif %}
+      </button>
+      <a href="/lista_usuarios" class="btn btn-danger mt-3">Cancelar</a>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

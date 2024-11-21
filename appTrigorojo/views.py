@@ -35,15 +35,15 @@ def lista_usuarios(request):
     if not request.user.groups.filter(name='Propietario').exists():
         return redirect('..')  
 
-    # Obtén todos los usuarios
-    usuarios = User.objects.all()
+    # Obtiene todos los usuarios, pero excluye superusuarios
+    usuarios = User.objects.filter(is_superuser=False)  
 
     #contexto
     context = {'usuarios': usuarios}
 
     return render(request, 'lista_usuarios.html', context)
 
-@login_required
+
 def crear_usuario(request):
     # Verifica que el usuario sea Propietario
     if not request.user.groups.filter(name='Propietario').exists():
@@ -55,6 +55,11 @@ def crear_usuario(request):
         password = request.POST.get('password')
         group_name = request.POST.get('group')
 
+        # Validar que no se asigne el grupo 'Propietario'
+        if group_name == 'Propietario':
+            messages.error(request, "No tienes permiso para crear usuarios con el grupo Propietario.")
+            return redirect('crear_usuario')
+
         # Crear el nuevo usuario
         user = User.objects.create_user(username=username, email=email, password=password)
 
@@ -65,7 +70,65 @@ def crear_usuario(request):
         messages.success(request, f"El usuario {username} ha sido creado con éxito.")
         return redirect('usuarios')  # O la página que desees redirigir después de la creación
 
-    return render(request, 'crear_usuario.html')
+    # Pasar todos los grupos al template excepto 'Propietario'
+    grupos = Group.objects.exclude(name='Propietario')
+    return render(request, 'crear_usuario.html', {'grupos': grupos})
+
+
+def actualizar_usuario(request, id):
+    # Verifica que el usuario sea Propietario
+    if not request.user.groups.filter(name='Propietario').exists():
+        return redirect('..')
+
+    # Obtener el usuario a editar
+    usuario = get_object_or_404(User, id=id)
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        group_name = request.POST.get('group')
+
+        # Actualizar información del usuario
+        usuario.username = username
+        usuario.email = email
+
+        # Reasignar el grupo
+        if group_name:
+            group = Group.objects.get(name=group_name)
+            usuario.groups.clear()  # Elimina todos los grupos actuales
+            usuario.groups.add(group)
+
+        usuario.save()
+        messages.success(request, f"El usuario {usuario.username} ha sido actualizado con éxito.")
+        return redirect('usuarios')  # O la página que desees redirigir después de la actualización
+
+    # Filtrar los grupos, excluyendo 'Propietario' y otros si es necesario
+    grupos = Group.objects.exclude(name='Propietario')  # Excluir el grupo 'Propietario'
+
+    # Contexto inicial para el formulario
+    context = {
+        'usuario': usuario,
+        'grupos': grupos,
+    }
+    return render(request, 'crear_usuario.html', context)
+
+
+def eliminar_usuario(request, id):
+    # Verifica que el usuario sea Propietario
+    if not request.user.groups.filter(name='Propietario').exists():
+        return redirect('..')  # Redirigir si no es propietario
+
+    # Obtén el usuario que se desea eliminar
+    usuario = get_object_or_404(User, id=id)
+
+    # Eliminar el usuario
+    usuario.delete()
+
+    # Mensaje de éxito
+    messages.success(request, f"El usuario {usuario.username} ha sido eliminado con éxito.")
+    
+    # Redirigir a la lista de usuarios
+    return redirect('usuarios')  # Asegúrate de que 'usuarios' sea el nombre correcto de la URL de lista de usuarios
 
 @login_required
 def perfil_redirect(request):
@@ -78,7 +141,7 @@ def perfil_redirect(request):
     else:
         return redirect('index')  # Si no es ni propietario ni vendedor, redirigir al inicio
 
-@user_passes_test(es_propietario)
+
 def listar_productos(request):
     categoria = request.GET.get('categoria', None)  # Filtro por nombre de categoría
     

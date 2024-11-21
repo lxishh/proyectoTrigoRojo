@@ -29,6 +29,8 @@ urlpatterns = [
     path('perfil_redirect/', views.perfil_redirect, name='perfil_redirect'),
     path('lista_usuarios/', views.lista_usuarios, name='usuarios'),
     path('crear_usuario/', views.crear_usuario, name='crear_usuario'),
+    path('actualizar_usuario/<int:id>/', views.actualizar_usuario, name='actualizar_usuario'),
+    path('eliminar_usuario/<int:id>/', views.eliminar_usuario, name='eliminar_usuario'),
     path('categoria/<int:categoria_id>/productos/', views.productos_por_categoria, name='productos_por_categoria'),
     path('productos/', views.listar_productos),
     path('registrar_producto/', views.registrar_producto),
