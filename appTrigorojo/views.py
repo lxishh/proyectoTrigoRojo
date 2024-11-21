@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from appTrigorojo.models import Categoria, Producto
 from appTrigorojo.forms import FormularioProducto
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 
 # Create your views here.
 def index(request):
@@ -11,6 +13,11 @@ def index(request):
 def login(request):
     return render(request, 'login.html')
 
+def salir(request):
+    logout(request)
+    return redirect('index')
+
+# esta def solamente se ocupa para poder hacer uso del content block
 def administracion(request):
     return render(request, 'administracion.html')
 
@@ -23,6 +30,7 @@ def productos_por_categoria(request, categoria_id):
 def ventas_view(request):
     return render(request, 'ventas.html')
 
+@login_required
 def listar_productos(request):
     categoria = request.GET.get('categoria', None)  # Filtro por nombre de categoría
     
