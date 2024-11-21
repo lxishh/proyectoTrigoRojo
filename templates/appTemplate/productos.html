@@ -90,11 +90,15 @@
                   class="btn btn-success btn-sm"
                   ><i class="bi bi-pencil"></i
                 ></a>
-                <a
-                  href="/eliminar_producto/{{p.id}}"
+                <!-- Botón para eliminar, que activa el modal -->
+                <button
                   class="btn btn-danger btn-sm"
-                  ><i class="bi bi-trash"></i
-                ></a>
+                  data-bs-toggle="modal"
+                  data-bs-target="#confirmModal"
+                  onclick="setDeleteUrl('{{ p.id }}')"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
               </td>
             </tr>
             {% endfor %}
@@ -105,6 +109,50 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de confirmación de eliminación -->
+<div
+  class="modal fade"
+  id="confirmModal"
+  tabindex="-1"
+  aria-labelledby="confirmModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">
+          Confirmar Eliminación
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas eliminar este elemento? Esta acción no se
+        puede deshacer.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <!-- El enlace se actualizará con el ID del usuario -->
+        <a id="confirmDeleteButton" href="#" class="btn btn-danger">Eliminar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Esta función se ejecuta cuando el usuario hace clic en el botón de eliminar
+  function setDeleteUrl(id) {
+    var url = "/eliminar_producto/" + id ; // Modificar según la URL de eliminación
+    document.getElementById("confirmDeleteButton").setAttribute("href", url);
+  }
+</script>
 
 <!-- se enlaza el archivo javascript  -->
 <script src="{% static 'js/productos_busqueda_tabla.js' %}"></script>
