@@ -3,6 +3,8 @@ from appTrigorojo.models import Categoria, Producto
 from appTrigorojo.forms import FormularioProducto
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
+from django.contrib.auth.models import User, Group
+from django.contrib import messages
 
 # Create your views here.
 def index(request):
@@ -28,10 +30,49 @@ def es_propietario(user):
 def es_vendedor(user):
     return user.groups.filter(name='Vendedor').exists()
 
+def lista_usuarios(request):
+    # Verifica que el usuario sea Propietario
+    if not request.user.groups.filter(name='Propietario').exists():
+        return redirect('..')  
+
+    # Obtén todos los usuarios
+    usuarios = User.objects.all()
+
+    #contexto
+    context = {'usuarios': usuarios}
+
+    return render(request, 'lista_usuarios.html', context)
+
+@login_required
+def crear_usuario(request):
+    # Verifica que el usuario sea Propietario
+    if not request.user.groups.filter(name='Propietario').exists():
+        return redirect('..')  
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        group_name = request.POST.get('group')
+
+        # Crear el nuevo usuario
+        user = User.objects.create_user(username=username, email=email, password=password)
+
+        # Asignar el grupo
+        group = Group.objects.get(name=group_name)
+        user.groups.add(group)
+
+        messages.success(request, f"El usuario {username} ha sido creado con éxito.")
+        return redirect('usuarios')  # O la página que desees redirigir después de la creación
+
+    return render(request, 'crear_usuario.html')
+
 @login_required
 def perfil_redirect(request):
-    if es_propietario(request.user):
-        return redirect('listar_productos')  # Redirigir a la vista de productos para el propietario
+    if request.user.is_superuser:  # Verificar si es superusuario
+        return redirect('/admin/')  # Redirigir al panel de administración
+    elif es_propietario(request.user):
+        return redirect('/productos')  # Redirigir a la vista de productos para el propietario
     elif es_vendedor(request.user):
         return redirect('/ventas')  # Redirigir a la vista de ventas para el vendedor
     else:
