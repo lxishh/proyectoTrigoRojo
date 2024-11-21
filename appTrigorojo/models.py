@@ -7,6 +7,7 @@ class Categoria(models.Model):
     imagen = models.ImageField(upload_to='categorias/', blank=True, null=True)  # Imagen opcional 
 
     class Meta:
+        db_table = 'categorias'  # Nombre de la tabla en la base de datos
         verbose_name = 'categoria'
         verbose_name_plural = 'categorias'
 
@@ -22,6 +23,7 @@ class Producto(models.Model):
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'productos'  # Nombre de la tabla en la base de datos
         verbose_name = 'producto'
         verbose_name_plural = 'productos'
 

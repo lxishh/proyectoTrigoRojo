@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
+from django.db import connection
 
 # Create your views here.
 def index(request):
@@ -30,10 +31,7 @@ def es_propietario(user):
 def es_vendedor(user):
     return user.groups.filter(name='Vendedor').exists()
 
-def lista_usuarios(request):
-    # Verifica que el usuario sea Propietario
-    if not request.user.groups.filter(name='Propietario').exists():
-        return redirect('..')  
+def lista_usuarios(request): 
 
     # Obtiene todos los usuarios, pero excluye superusuarios
     usuarios = User.objects.filter(is_superuser=False)  
@@ -45,9 +43,6 @@ def lista_usuarios(request):
 
 
 def crear_usuario(request):
-    # Verifica que el usuario sea Propietario
-    if not request.user.groups.filter(name='Propietario').exists():
-        return redirect('..')  
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -76,10 +71,6 @@ def crear_usuario(request):
 
 
 def actualizar_usuario(request, id):
-    # Verifica que el usuario sea Propietario
-    if not request.user.groups.filter(name='Propietario').exists():
-        return redirect('..')
-
     # Obtener el usuario a editar
     usuario = get_object_or_404(User, id=id)
 
@@ -114,10 +105,6 @@ def actualizar_usuario(request, id):
 
 
 def eliminar_usuario(request, id):
-    # Verifica que el usuario sea Propietario
-    if not request.user.groups.filter(name='Propietario').exists():
-        return redirect('..')  # Redirigir si no es propietario
-
     # Obtén el usuario que se desea eliminar
     usuario = get_object_or_404(User, id=id)
 
@@ -133,7 +120,7 @@ def eliminar_usuario(request, id):
 @login_required
 def perfil_redirect(request):
     if request.user.is_superuser:  # Verificar si es superusuario
-        return redirect('/admin/')  # Redirigir al panel de administración
+        return redirect('/productos')   # Redirigir al panel de administración
     elif es_propietario(request.user):
         return redirect('/productos')  # Redirigir a la vista de productos para el propietario
     elif es_vendedor(request.user):
@@ -142,56 +129,85 @@ def perfil_redirect(request):
         return redirect('index')  # Si no es ni propietario ni vendedor, redirigir al inicio
 
 
+# Función para ejecutar procedimientos almacenados
+def ejecutar_procedimiento(proc_nombre, params=()):
+    with connection.cursor() as cursor:
+        cursor.callproc(proc_nombre, params)
+        if proc_nombre in ['listar_productos']:  # Solo obtener resultados si es un SELECT
+            return cursor.fetchall()
+        return None
+
+# Vista para listar productos usando el procedimiento almacenado
 def listar_productos(request):
-    categoria = request.GET.get('categoria', None)  # Filtro por nombre de categoría
-    
-    # Obtener todos los productos
-    productos = Producto.objects.all()
-    
-    # Filtrar productos por nombre de categoría si se especifica
-    if categoria:
-        productos = productos.filter(categoria__nombre=categoria)
+    productos_raw = ejecutar_procedimiento('listar_productos')
 
-    # Obtener las categorías distintas para los filtros
-    categorias = Categoria.objects.values_list('nombre', flat=True).distinct()
+    # Asume que el procedimiento devuelve las columnas en este orden
+    productos = [
+        {
+            'id': p[0],
+            'nombre': p[1],
+            'descripcion': p[2],
+            'cantidad': p[3],
+            'precio': p[4],
+            'categoria': p[5],
+            'fecha_ingreso': p[6],
+        }
+        for p in productos_raw
+    ]
 
-    # Pasar los productos y las categorías al contexto
+    categorias = Categoria.objects.all()
     context = {
         'productos': productos,
         'categorias': categorias,
     }
-
-    # Renderizar la página con el contexto
     return render(request, 'productos.html', context)
 
+
+# Vista para registrar un producto usando el procedimiento almacenado
 def registrar_producto(request):
     form = FormularioProducto()
     if request.method == 'POST':
         form = FormularioProducto(request.POST)
         if form.is_valid():
-            form.save()
+            nombre = form.cleaned_data['nombre']
+            descripcion = form.cleaned_data['descripcion']
+            cantidad = form.cleaned_data['cantidad']
+            precio = form.cleaned_data['precio']
+            categoria_id = form.cleaned_data['categoria'].id  # Asumimos que se está pasando un objeto de categoría
+            
+            # Llamamos al procedimiento almacenado para registrar el producto
+            ejecutar_procedimiento('registrar_producto', [nombre, descripcion, cantidad, precio, categoria_id])
+            
             return redirect('/productos')
-    else:
-        form = FormularioProducto()
-    context = {'form':form}
+    context = {'form': form}
     return render(request, 'registrar_productos.html', context)
 
+# Vista para actualizar un producto usando el procedimiento almacenado
 def actualizar_producto(request, id):
     producto = Producto.objects.get(id=id)
     form = FormularioProducto(instance=producto)
+    
     if request.method == 'POST':
         form = FormularioProducto(request.POST, instance=producto)
         if form.is_valid():
-            form.save()
+            nombre = form.cleaned_data['nombre']
+            descripcion = form.cleaned_data['descripcion']
+            cantidad = form.cleaned_data['cantidad']
+            precio = form.cleaned_data['precio']
+            categoria_id = form.cleaned_data['categoria'].id  # Asumimos que se está pasando un objeto de categoría
+            
+            # Llamamos al procedimiento almacenado para actualizar el producto
+            ejecutar_procedimiento('actualizar_producto', [id, nombre, descripcion, cantidad, precio, categoria_id])
+            
             return redirect('/productos')
-    else:
-        form = FormularioProducto(instance=producto)
-    context = {'form':form}
+    
+    context = {'form': form}
     return render(request, 'registrar_productos.html', context)
 
+# Vista para eliminar un producto usando el procedimiento almacenado
 def eliminar_producto(request, id):
-    producto = Producto.objects.get(id=id)
-    producto.delete()
+    # Llamamos al procedimiento almacenado para eliminar el producto
+    ejecutar_procedimiento('eliminar_producto', [id])
     return redirect('/productos')
 
 def productos_por_categoria(request, categoria_id):
