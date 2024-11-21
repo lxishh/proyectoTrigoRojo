@@ -25,6 +25,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('salir/', views.salir),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('perfil_redirect/', views.perfil_redirect, name='perfil_redirect'),
     path('administracion/', views.administracion),
     path('categoria/<int:categoria_id>/productos/', views.productos_por_categoria, name='productos_por_categoria'),
     path('productos/', views.listar_productos),
