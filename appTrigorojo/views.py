@@ -8,15 +8,17 @@ from django.contrib import messages
 from django.db import connection
 
 # Create your views here.
+
 def index(request):
     categorias = Categoria.objects.all()
     context = {'categorias': categorias}
     return render(request, 'index.html', context)
 
-# esta def solamente se ocupa para poder hacer uso del content block
+# Esta def solamente se ocupa para poder hacer uso del content block
 def administracion(request):
     return render(request, 'administracion.html')
 
+#def que te lleva a la template de login
 def login(request):
     return render(request, 'login.html')
 
@@ -24,13 +26,15 @@ def salir(request):
     logout(request)
     return redirect('index')
 
-# Funciones para verificar si el usuario es Propietario/Vendedora
+# Funciones para verificar si el usuario es Propietario o Vendedor
 def es_propietario(user):
     return user.groups.filter(name='Propietario').exists()
 
 def es_vendedor(user):
     return user.groups.filter(name='Vendedor').exists()
 
+
+#Funcion que llama al template de lista de usuarios y donde se le pasan los usuarios
 def lista_usuarios(request): 
 
     # Obtiene todos los usuarios, pero excluye superusuarios
@@ -42,8 +46,10 @@ def lista_usuarios(request):
     return render(request, 'lista_usuarios.html', context)
 
 
+#Funcion que llama al template de crear_usuario (donde es un formulario) y los campos se le pasan
 def crear_usuario(request):
 
+    #Valida si el formulario tiene un metodo POST
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -117,10 +123,11 @@ def eliminar_usuario(request, id):
     # Redirigir a la lista de usuarios
     return redirect('usuarios')  # Asegúrate de que 'usuarios' sea el nombre correcto de la URL de lista de usuarios
 
+
 @login_required
 def perfil_redirect(request):
     if request.user.is_superuser:  # Verificar si es superusuario
-        return redirect('/productos')   # Redirigir al panel de administración
+        return redirect('/productos')   # Redirigir a la vista de productos
     elif es_propietario(request.user):
         return redirect('/productos')  # Redirigir a la vista de productos para el propietario
     elif es_vendedor(request.user):
@@ -129,8 +136,11 @@ def perfil_redirect(request):
         return redirect('index')  # Si no es ni propietario ni vendedor, redirigir al inicio
 
 
+
+
+
 # Función para ejecutar procedimientos almacenados
-def ejecutar_procedimiento(proc_nombre, params=()):
+def ejecutar_procedimiento(proc_nombre, params=()): #se define que se debe pasar el nombre del procedimiento y los parametros respectivos
     with connection.cursor() as cursor:
         cursor.callproc(proc_nombre, params)
         if proc_nombre in ['listar_productos']:  # Solo obtener resultados si es un SELECT
@@ -177,8 +187,8 @@ def registrar_producto(request):
             
             # Llamamos al procedimiento almacenado para registrar el producto
             ejecutar_procedimiento('registrar_producto', [nombre, descripcion, cantidad, precio, categoria_id])
-            
             return redirect('/productos')
+        
     context = {'form': form}
     return render(request, 'registrar_productos.html', context)
 
@@ -198,7 +208,6 @@ def actualizar_producto(request, id):
             
             # Llamamos al procedimiento almacenado para actualizar el producto
             ejecutar_procedimiento('actualizar_producto', [id, nombre, descripcion, cantidad, precio, categoria_id])
-            
             return redirect('/productos')
     
     context = {'form': form}
@@ -210,6 +219,8 @@ def eliminar_producto(request, id):
     ejecutar_procedimiento('eliminar_producto', [id])
     return redirect('/productos')
 
+
+#Vista que llama a los modelos de categoria y productos, y luego el html hace que se muestren bien
 def productos_por_categoria(request, categoria_id):
     categoria = get_object_or_404(Categoria, id=categoria_id)
     productos = Producto.objects.filter(categoria=categoria)
